@@ -6,13 +6,13 @@
 </head>
 
 <body>
-    <script src="dist/script.js"></script>
 
     <div id="charts">
-        <div id="hour-chart" class="chart">
-            <div class="title">Time of Day</div>
+        <div id="payments-chart" class="dc-chart">
+            <div class="title">Time of Day <a class="reset" href="javascript:paymentHist.filterAll();dc.redrawAll();" style="display: none;">reset</a></div>
+            
         </div>
-        <div id="delay-chart" class="chart">
+        <!-- <div id="delay-chart" class="chart">
             <div class="title">Arrival Delay (min.)</div>
         </div>
         <div id="distance-chart" class="chart">
@@ -20,14 +20,15 @@
         </div>
         <div id="date-chart" class="chart">
             <div class="title">Date</div>
-        </div>
+        </div> -->
     </div>
     
-    <aside id="totals"><span id="active">-</span> of <span id="total">-</span> flights selected.</aside>
+    <!-- <aside id="totals"><span id="active">-</span> of <span id="total">-</span> flights selected.</aside> -->
     
-    <div id="lists">
+    <!-- <div id="lists">
         <div id="flight-list" class="list"></div>
-    </div>
+    </div> -->
+    <script src="dist/bundle.js"></script>
 </body>
 
 </html>

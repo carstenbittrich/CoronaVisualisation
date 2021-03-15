@@ -4,6 +4,7 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "emitDecoratorMetadata": true,
+        "esModuleInterop": true,
         "experimentalDecorators": true,
         "sourceMap": true,
         "removeComments": true,
@@ -12,6 +13,5 @@
     },
     "exclude": [],
     "files": ["src/script.ts"],
-    "filesGlob": [],
-    "esModuleInterop": true
+    "filesGlob": []
 }
