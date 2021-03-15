@@ -1,0 +1,24 @@
+{
+  "name": "corona-crossfilter",
+  "version": "1.0.0",
+  "description": "multi-dimensional visualisation of corona case numbers in germany",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "update": "wget https://pavelmayer.de/covid/risks/all-series.csv"
+  },
+  "author": "carsten.bittrich@icloud.com",
+  "license": "ISC",
+  "dependencies": {
+    "crossfilter2": "^1.5.4",
+    "dc": "^4.2.5"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.17.0",
+    "@typescript-eslint/parser": "^4.17.0",
+    "eslint": "^7.22.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1"
+  }
+}

@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ES2018",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "sourceMap": true,
+        "removeComments": true,
+        "declaration": true,
+        "outDir": "dist"
+    },
+    "exclude": [],
+    "files": ["src/script.ts"],
+    "filesGlob": [],
+    "esModuleInterop": true
+}
