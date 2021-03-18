@@ -4,7 +4,9 @@
   "description": "multi-dimensional visualisation of corona case numbers in germany",
   "main": "index.js",
   "scripts": {
-    "build": "tsc; yarn webpack",
+    "build": "tsc && yarn webpack",
+    "clean": "rimraf dist",
+    "prepareCSV": "python3 prepareCSV.py",
     "test": "echo \"Error: no test specified\" && exit 1",
     "update": "wget https://pavelmayer.de/covid/risks/all-series.csv"
   },
@@ -12,9 +14,9 @@
   "license": "MIT",
   "dependencies": {
     "crossfilter2": "^1.5.4",
-    "dc": "^4.2.5",
     "d3": "^6.6.0",
     "d3-scale-chromatic": "^2.0.0",
+    "dc": "^4.2.5",
     "webpack": "^5.26.0"
   },
   "devDependencies": {
@@ -23,7 +25,7 @@
     "eslint": "^7.22.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-import": "^2.22.1",
+    "rimraf": "*",
     "webpack-cli": "^4.5.0"
   }
 }
