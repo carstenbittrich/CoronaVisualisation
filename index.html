@@ -3,14 +3,15 @@
 
 <head>
     <title>TypeScript sample project</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/dc.css">
 </head>
 
 <body>
-
-    <div id="charts">
+    <div class='container'>
+    <div class='row'id="charts">
         <div id="payments-chart" class="dc-chart">
             <div class="title">Time of Day <a class="reset" href="javascript:paymentHist.filterAll();dc.redrawAll();" style="display: none;">reset</a></div>
-            
         </div>
         <!-- <div id="delay-chart" class="chart">
             <div class="title">Arrival Delay (min.)</div>
@@ -22,7 +23,13 @@
             <div class="title">Date</div>
         </div> -->
     </div>
-    
+    <div class='row' id='daily_cases'>
+        <div id="daily-cases-chart" class="dc-chart"></div>
+    </div>
+    <div class='row' id='range_chart'>
+        <div id="time-range-chart" class="dc-chart"></div>
+    </div>
+    </div>
     <!-- <aside id="totals"><span id="active">-</span> of <span id="total">-</span> flights selected.</aside> -->
     
     <!-- <div id="lists">

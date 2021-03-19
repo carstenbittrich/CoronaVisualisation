@@ -1,75 +1,85 @@
 import crossfilter from 'crossfilter2';
 import * as dc from 'dc';
-import { schemePaired, scaleLinear } from 'd3';
+import * as d3 from 'd3';
 
-dc.config.defaultColors(schemePaired);
+dc.config.defaultColors(d3.schemePaired);
 
 export const paymentHist = new dc.BarChart('#payments-chart');
+export const dailyCasesChart = new dc.BarChart('#daily-cases-chart');
+export const timeRangeChart = new dc.BarChart('#time-range-chart');
 
-export const payments = crossfilter([
-  {
-    date: '2011-11-14T16:17:54Z', quantity: 2, total: 190, tip: 100, type: 'tab', productIDs: ['001'],
-  },
-  {
-    date: '2011-11-14T16:20:19Z', quantity: 2, total: 190, tip: 100, type: 'tab', productIDs: ['001', '005'],
-  },
-  {
-    date: '2011-11-14T16:28:54Z', quantity: 1, total: 300, tip: 200, type: 'visa', productIDs: ['004', '005'],
-  },
-  {
-    date: '2011-11-14T16:30:43Z', quantity: 2, total: 90, tip: 0, type: 'tab', productIDs: ['001', '002'],
-  },
-  {
-    date: '2011-11-14T16:48:46Z', quantity: 2, total: 90, tip: 0, type: 'tab', productIDs: ['005'],
-  },
-  {
-    date: '2011-11-14T16:53:41Z', quantity: 2, total: 90, tip: 0, type: 'tab', productIDs: ['001', '004', '005'],
-  },
-  {
-    date: '2011-11-14T16:54:06Z', quantity: 1, total: 100, tip: 0, type: 'cash', productIDs: ['001', '002', '003', '004', '005'],
-  },
-  {
-    date: '2011-11-14T16:58:03Z', quantity: 2, total: 90, tip: 0, type: 'tab', productIDs: ['001'],
-  },
-  {
-    date: '2011-11-14T17:07:21Z', quantity: 2, total: 90, tip: 0, type: 'tab', productIDs: ['004', '005'],
-  },
-  {
-    date: '2011-11-14T17:22:59Z', quantity: 2, total: 90, tip: 0, type: 'tab', productIDs: ['001', '002', '004', '005'],
-  },
-  {
-    date: '2011-11-14T17:25:45Z', quantity: 2, total: 200, tip: 0, type: 'cash', productIDs: ['002'],
-  },
-  {
-    date: '2011-11-14T17:29:52Z', quantity: 1, total: 200, tip: 100, type: 'visa', productIDs: ['004'],
-  },
-]);
+d3.csv('filtered.csv').then((germanyData) => {
+  // Since its a csv file we need to format the data a bit.
+  const dateFormatSpecifier = '%d.%m.%Y';
+  // const dateFormat = d3.timeFormat(dateFormatSpecifier);
+  const dateFormatParser = d3.timeParse(dateFormatSpecifier);
 
-// const all = payments.groupAll();
+  germanyData.forEach((d) => {
+    d.dd = dateFormatParser(d.Datum);
+    d.week = d3.timeWeek(d.dd);
+  });
 
-const typeDimension = payments.dimension((d) => d.total);
-const typeGroup = typeDimension.group();
+  const data = crossfilter(germanyData);
 
-paymentHist.width(420).height(180).margins({
-  top: 10, right: 50, bottom: 30, left: 40,
-})
-  .dimension(typeDimension)
-  .group(typeGroup)
-  .elasticY(true)
-  .alwaysUseRounding(true)
-  .x(scaleLinear().domain([0, 250]))
-  .renderHorizontalGridLines(true);
+  // const all = data.groupAll();
 
-console.log('done');
+  // Dimension by full date
+  const weekDimension = data.dimension((d) => d['week']);
+  const dateDimension = data.dimension((d) => d['dd']);
+  const dailyGroup = dateDimension.group();
+  const incidenceDimension = data.dimension((d) => d["InzidenzFallNeu"]);
+  const indidenceByDayGroup = dateDimension.group().reduceSum((d) => d["InzidenzFallNeu"]);
 
-dc.renderAll();
+  paymentHist.width(800).height(380).margins({
+    top: 10, right: 50, bottom: 30, left: 40,
+  })
+    .dimension(incidenceDimension)
+    .group(indidenceByDayGroup)
+    .elasticY(true)
+    .alwaysUseRounding(true)
+    .x(d3.scaleLinear().domain([0, 50]))
+    .renderHorizontalGridLines(true);
 
-console.log('rendered');
+  dailyCasesChart.width(800)
+    .height(380)
+    .margins({
+      top: 0, right: 50, bottom: 20, left: 40,
+    })
+    .dimension(dateDimension)
+    .group(indidenceByDayGroup)
+    .centerBar(true)
+    .gap(1)
+    .rangeChart(timeRangeChart)
+    .x(d3.scaleTime().domain([new Date(2020, 2, 1), new Date(2021, 3, 19)]))
+    // .round(d3.timeDay.round)
+    .elasticY(true)
+    .alwaysUseRounding(true)
+    .xUnits(d3.timeDays);
 
-// function sayHello(name) {
-//   return `Hello World! I'm ${name}`;
-// }
+  timeRangeChart.width(800)
+    .height(40)
+    .margins({
+      top: 0, right: 50, bottom: 20, left: 40,
+    })
+    .dimension(weekDimension)
+    .group(indidenceByDayGroup)
+    .centerBar(true)
+    .gap(1)
+    .x(d3.scaleTime().domain([new Date(2020, 2, 1), new Date(2021, 3, 19)]))
+    .round(d3.timeWeek.round)
+    .elasticY(true)
+    .alwaysUseRounding(true)
+    .xUnits(d3.timeWeek);
 
-// const user = 'Mario Romano';
+  dc.renderAll();
 
-// document.body.innerHTML = sayHello(user);
+
+  // function sayHello(name) {
+  //   return `Hello World! I'm ${name}`;
+  // }
+
+  // const user = 'Mario Romano';
+
+  // document.body.innerHTML = sayHello(user);
+
+});

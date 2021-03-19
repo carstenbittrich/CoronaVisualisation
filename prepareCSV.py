@@ -31,8 +31,7 @@ for entry in csv_content:
             raise RuntimeError("Could not find all desired headers. Aborting")
 
     items_to_keep = []
-    for column in indices_to_keep:
-        index = column - 1
+    for index in indices_to_keep:
         items_to_keep.append(entry[index])
 
     # for the moment only for whole of germany
