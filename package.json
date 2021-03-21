@@ -8,7 +8,7 @@
     "clean": "rimraf dist",
     "prepareCSV": "python3 prepareCSV.py",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "update": "wget https://pavelmayer.de/covid/risks/all-series.csv"
+    "update": "rimraf all-series.csv && wget https://pavelmayer.de/covid/risks/all-series.csv"
   },
   "author": "carsten.bittrich@icloud.com",
   "license": "MIT",
