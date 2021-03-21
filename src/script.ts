@@ -4,11 +4,46 @@ import * as d3 from 'd3';
 
 dc.config.defaultColors(d3.schemePaired);
 
+type InputEntry = {
+  DatenstandTag: any,
+  Datum: any,
+  IdLandkreis: any,
+  Landkreis: any,
+  AnzahlFall: any,
+  AnzahlFallNeu: any,
+  AnzahlTodesfallNeu: any,
+  AnzahlGenesenNe: any,
+  InzidenzFallNeu_7TageSumme: any,
+  InzidenzFallNeu_7TageSumme_R: any,
+  Kontaktrisiko: string
+  dd?: any,
+  week?: any,
+  day?: any
+}
+type ParsedEntry = {
+  DatenstandTag: number,
+  Datum: string,
+  IdLandkreis: number,
+  Landkreis: string,
+  AnzahlFall: number,
+  AnzahlFallNeu: number,
+  AnzahlTodesfallNeu: number,
+  AnzahlGenesenNe: number,
+  InzidenzFallNeu_7TageSumme: number,
+  InzidenzFallNeu_7TageSumme_R: number,
+  Kontaktrisiko: number
+  dd?: any,
+  week?: any,
+  day?: any
+}
+
+type CrossfilteredEntry = crossfilter.Crossfilter<ParsedEntry>;
+
 export const dailyCasesChart = new dc.BarChart('#daily-cases-chart');
 export const timeRangeChart = new dc.BarChart('#time-range-chart');
 export const laenderChart = new dc.RowChart('#laender-chart');
 
-d3.csv('filtered.csv').then((germanyData) => {
+d3.csv('filtered.csv').then((germanyData: Array<InputEntry>) => {
   console.log('done parsing');
   // Since its a csv file we need to format the data a bit.
   const dateFormatSpecifier = '%d.%m.%Y';
@@ -17,20 +52,23 @@ d3.csv('filtered.csv').then((germanyData) => {
   germanyData.forEach((d) => {
     d.dd = dateFormatParser(d.Datum);
     d.week = d3.timeWeek(d.dd);
+    d.day = d3.timeDay(d.dd);
   });
 
-  const data = crossfilter(germanyData);
-
-  // const all = data.groupAll();
+  // type hack to live with undeclared type transitions inside of crossfilter:
+  let crossfiltered = (crossfilter(germanyData) as unknown)
+  const data: CrossfilteredEntry = crossfiltered as CrossfilteredEntry;
 
   // Dimension by full date
-  const weekDimension = data.dimension((d) => d['week']);
-  const dateDimension = data.dimension((d) => d['dd']);
-  const laenderDimension = data.dimension((d) => d['Landkreis']);
+  const weekDimension = data.dimension((d) => d.week);
+
+  const dateDimension = data.dimension((d) => d.dd);
   const dailyGroup = dateDimension.group();
+  const indidenceByDayGroup = dailyGroup.reduceSum((d) => d.InzidenzFallNeu_7TageSumme);
+
+  const laenderDimension = data.dimension((d) => d.Landkreis);
   const laenderGroup = laenderDimension.group();
-  const indidenceByDayGroup = dailyGroup.reduceSum((d) => d["InzidenzFallNeu"]);
-  const incidenceByLandGroup = laenderGroup.reduceSum((d) => d['InzidenzFallNeu']);
+  const incidenceByLandGroup = laenderGroup.reduceSum((d) => d.InzidenzFallNeu_7TageSumme);
 
   laenderChart /* dc.rowChart('#day-of-week-chart', 'chartGroup') */
     .width(800)

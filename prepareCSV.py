@@ -53,7 +53,10 @@ for entry in csv_content:
         continue
 
     # testing
-    if entry[2] != 1:
+    if entry[2] != '1':
+        continue
+
+    if int(entry[0]) < 38:
         continue
 
     # check compatibility
@@ -61,12 +64,15 @@ for entry in csv_content:
     for name, column in headers_to_keep.items():
         index = column['index']
         val = entry[index]
+
+        if val == "inf":
+            val = column['default']
+
         # check type
         try:
             parsed = column['type'](val)
         except:
             val = column['default']
-
         # append
         items_to_keep.append(val)
 
