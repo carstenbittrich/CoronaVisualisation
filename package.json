@@ -7,6 +7,7 @@
     "build": "tsc && yarn webpack",
     "clean": "rimraf dist",
     "prepareCSV": "python3 prepareCSV.py",
+    "serve": "bundle exec jekyll serve",
     "test": "echo \"Error: no test specified\" && exit 1",
     "update": "rimraf all-series.csv && wget https://pavelmayer.de/covid/risks/all-series.csv"
   },

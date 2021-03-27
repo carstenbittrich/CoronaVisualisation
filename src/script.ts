@@ -39,9 +39,9 @@ type ParsedEntry = {
 
 type CrossfilteredEntry = crossfilter.Crossfilter<ParsedEntry>;
 
+export const laenderChart = new dc.RowChart('#laender-chart');
 export const dailyCasesChart = new dc.BarChart('#daily-cases-chart');
 export const timeRangeChart = new dc.BarChart('#time-range-chart');
-export const laenderChart = new dc.RowChart('#laender-chart');
 
 d3.csv('filtered.csv').then((germanyData: Array<InputEntry>) => {
   console.log('done parsing');
@@ -64,15 +64,27 @@ d3.csv('filtered.csv').then((germanyData: Array<InputEntry>) => {
 
   const dateDimension = data.dimension((d) => d.dd);
   const dailyGroup = dateDimension.group();
-  const indidenceByDayGroup = dailyGroup.reduceSum((d) => d.InzidenzFallNeu_7TageSumme);
 
   const laenderDimension = data.dimension((d) => d.Landkreis);
   const laenderGroup = laenderDimension.group();
+
+  const indidenceByDayGroup = dailyGroup.reduceSum((d) => d.InzidenzFallNeu_7TageSumme);
+  const incidenceDailyByLands: Array<crossfilter.Group<ParsedEntry, crossfilter.NaturallyOrderedValue, unknown> > = [];
+  for (let landIndex = 0; landIndex < 17; landIndex++){
+    incidenceDailyByLands.push(laenderGroup.reduceSum((d: ParsedEntry) => {
+      if (d.IdLandkreis == landIndex) {
+        return d.InzidenzFallNeu_7TageSumme;
+      }
+      return 0.0000000001;
+    }));
+  }
+
+
   const incidenceByLandGroup = laenderGroup.reduceSum((d) => d.InzidenzFallNeu_7TageSumme);
 
   laenderChart /* dc.rowChart('#day-of-week-chart', 'chartGroup') */
     .width(800)
-    .height(280)
+    .height(480)
     .margins({
       top: 20, left: 10, right: 10, bottom: 20,
     })
@@ -80,7 +92,7 @@ d3.csv('filtered.csv').then((germanyData: Array<InputEntry>) => {
     .dimension(laenderDimension)
   // Assign colors to each value in the x scale domain
     // .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
-    .label((d) => d.key.split('.')[1])
+    // .label((d) => d.key.split('.')[1])
   // Title sets the row text
     // .title((d) => d.value)
     .elasticX(true)
@@ -99,7 +111,7 @@ d3.csv('filtered.csv').then((germanyData: Array<InputEntry>) => {
       top: 0, right: 50, bottom: 20, left: 40,
     })
     .dimension(dateDimension)
-    .group(indidenceByDayGroup)
+    .group(incidenceDailyByLands[1])
     .centerBar(true)
     .gap(1)
     .rangeChart(timeRangeChart)

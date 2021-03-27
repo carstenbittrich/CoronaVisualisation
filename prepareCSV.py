@@ -49,15 +49,15 @@ for entry in csv_content:
         continue
 
     # for the moment only for bundeslaender
-    if entry[4] not in ['BL']:
+    if entry[4] not in ["BL", "BR"]:
         continue
 
-    # testing
-    if entry[2] != '1':
-        continue
+    # # testing
+    # if entry[2] != '1':
+    #     continue
 
-    if int(entry[0]) < 38:
-        continue
+    # if int(entry[0]) < 38:
+    #     continue
 
     # check compatibility
     items_to_keep = []
