@@ -11,6 +11,7 @@ type InputEntry = {
   Landkreis: any,
   AnzahlFall: any,
   AnzahlFallNeu: any,
+  AnzahlFallNeu_7TageSumme: any,
   AnzahlTodesfallNeu: any,
   AnzahlGenesenNe: any,
   InzidenzFallNeu_7TageSumme: any,
@@ -27,6 +28,7 @@ type ParsedEntry = {
   Landkreis: string,
   AnzahlFall: number,
   AnzahlFallNeu: number,
+  AnzahlFallNeu_7TageSumme: number,
   AnzahlTodesfallNeu: number,
   AnzahlGenesenNe: number,
   InzidenzFallNeu_7TageSumme: number,
@@ -40,8 +42,9 @@ type ParsedEntry = {
 type CrossfilteredEntry = crossfilter.Crossfilter<ParsedEntry>;
 
 export const laenderChart = new dc.RowChart('#laender-chart');
-export const dailyCasesChart = new dc.BarChart('#daily-cases-chart');
 export const timeRangeChart = new dc.BarChart('#time-range-chart');
+export const dailyRValue = new dc.LineChart('#daily-Rvalue');
+export const dailyCasesChart = new dc.BarChart('#daily-cases-chart');
 
 d3.csv('filtered.csv').then((germanyData: Array<InputEntry>) => {
   console.log('done parsing');
@@ -64,23 +67,34 @@ d3.csv('filtered.csv').then((germanyData: Array<InputEntry>) => {
 
   const dateDimension = data.dimension((d) => d.dd);
   const dailyGroup = dateDimension.group();
+  const smoothenedCasesByDayGroup = dateDimension.group().reduceSum(d => d.AnzahlFallNeu_7TageSumme);
 
-  const laenderDimension = data.dimension((d) => d.Landkreis);
+  const laenderDimension = data.dimension(d => d.Landkreis);
   const laenderGroup = laenderDimension.group();
+  const casesByLandGroup = laenderDimension.group().reduceSum(d => d.AnzahlFallNeu);
 
-  const indidenceByDayGroup = dailyGroup.reduceSum((d) => d.InzidenzFallNeu_7TageSumme);
-  const incidenceDailyByLands: Array<crossfilter.Group<ParsedEntry, crossfilter.NaturallyOrderedValue, unknown> > = [];
-  for (let landIndex = 0; landIndex < 17; landIndex++){
-    incidenceDailyByLands.push(laenderGroup.reduceSum((d: ParsedEntry) => {
-      if (d.IdLandkreis == landIndex) {
-        return d.InzidenzFallNeu_7TageSumme;
-      }
-      return 0.0000000001;
-    }));
-  }
+  const casesByDayGroup = dateDimension.group().reduceSum(d => d.AnzahlFallNeu);
+  const contactRiskByDayGroup = dateDimension.group().reduceSum(d => {
+    if (d.InzidenzFallNeu_7TageSumme_R > 10) {
+      return 10;
+    }
+    return d.InzidenzFallNeu_7TageSumme_R;
+  });
+  // const casesByDayGroup = dateDimension.group().reduceSum((d) => d.AnzahlFallNeu_7TageSumme);
+
+  const indidenceByDayGroup = dailyGroup.reduceSum(d => d.InzidenzFallNeu_7TageSumme);
+  // const incidenceDailyByLands: Array<crossfilter.Group<ParsedEntry, crossfilter.NaturallyOrderedValue, unknown> > = [];
+  // // for (let landIndex = 0; landIndex < 17; landIndex++){
+  // //   incidenceDailyByLands.push(laenderGroup.reduceSum((d: ParsedEntry) => {
+  // //     if (d.IdLandkreis == landIndex) {
+  // //       return d.InzidenzFallNeu_7TageSumme;
+  // //     }
+  // //     return 0.0000000001;
+  // //   }));
+  // // }
 
 
-  const incidenceByLandGroup = laenderGroup.reduceSum((d) => d.InzidenzFallNeu_7TageSumme);
+  // const incidenceByLandGroup = laenderGroup.reduceSum((d) => d.InzidenzFallNeu_7TageSumme);
 
   laenderChart /* dc.rowChart('#day-of-week-chart', 'chartGroup') */
     .width(800)
@@ -88,38 +102,10 @@ d3.csv('filtered.csv').then((germanyData: Array<InputEntry>) => {
     .margins({
       top: 20, left: 10, right: 10, bottom: 20,
     })
-    .group(incidenceByLandGroup)
+    .group(casesByLandGroup)
     .dimension(laenderDimension)
-  // Assign colors to each value in the x scale domain
-    // .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
-    // .label((d) => d.key.split('.')[1])
-  // Title sets the row text
-    // .title((d) => d.value)
     .elasticX(true)
     .xAxis()
-    // .ticks(4);
-    // .rangeChart(timeRangeChart)
-    // .x(d3.scaleTime().domain([new Date(2020, 2, 1), new Date(2021, 3, 19)]))
-    // .round(d3.timeDay.round)
-    // .elasticY(true)
-    // .alwaysUseRounding(true)
-    // .xUnits(d3.timeDays);
-
-  dailyCasesChart.width(800)
-    .height(380)
-    .margins({
-      top: 0, right: 50, bottom: 20, left: 40,
-    })
-    .dimension(dateDimension)
-    .group(incidenceDailyByLands[1])
-    .centerBar(true)
-    .gap(1)
-    .rangeChart(timeRangeChart)
-    .x(d3.scaleTime().domain([new Date(2020, 2, 1), new Date(2021, 3, 19)]))
-    // .round(d3.timeDay.round)
-    .elasticY(true)
-    .alwaysUseRounding(true)
-    .xUnits(d3.timeDays);
 
   timeRangeChart.width(800)
     .height(40)
@@ -127,14 +113,46 @@ d3.csv('filtered.csv').then((germanyData: Array<InputEntry>) => {
       top: 0, right: 50, bottom: 20, left: 40,
     })
     .dimension(weekDimension)
-    .group(indidenceByDayGroup)
+    .group(smoothenedCasesByDayGroup)
+    .centerBar(true)
+    .gap(0)
+    .x(d3.scaleTime().domain([new Date(2020, 2, 1), new Date(2021, 3, 19)]))
+    // .round(d3.timeWeek.round)
+    .elasticY(true)
+    // .alwaysUseRounding(true)
+    .xUnits(d3.timeWeek);
+
+  
+  dailyRValue.width(800)
+    .height(380)
+    .margins({
+      top: 0, right: 50, bottom: 20, left: 40,
+    })
+    .dimension(dateDimension)
+    .group(contactRiskByDayGroup)
+    .rangeChart(timeRangeChart)
+    .x(d3.scaleTime().domain([new Date(2020, 2, 1), new Date(2021, 3, 19)]))
+    // .round(d3.timeDay.round)
+    .elasticY(true)
+    // .alwaysUseRounding(true)
+    .xUnits(d3.timeDays);
+
+  dailyCasesChart.width(800)
+    .height(380)
+    .margins({
+      top: 0, right: 50, bottom: 20, left: 40,
+    })
+    .dimension(dateDimension)
+    .group(casesByDayGroup)
     .centerBar(true)
     .gap(1)
+    .rangeChart(dailyRValue)
     .x(d3.scaleTime().domain([new Date(2020, 2, 1), new Date(2021, 3, 19)]))
-    .round(d3.timeWeek.round)
+    // .round(d3.timeDay.round)
     .elasticY(true)
-    .alwaysUseRounding(true)
-    .xUnits(d3.timeWeek);
+    // .alwaysUseRounding(true)
+    .xUnits(d3.timeDays);
+
 
   dc.renderAll();
 
